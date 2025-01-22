@@ -1,6 +1,18 @@
 from collections import Counter
+from dataclasses import asdict, dataclass
 from itertools import accumulate
 from math import log2
+from typing import List
+
+
+def dataclass_to_dict_with_properties(obj):
+    # Start with regular fields
+    data = asdict(obj)
+    # Add properties
+    for attr_name in dir(obj):
+        if isinstance(getattr(type(obj), attr_name, None), property):
+            data[attr_name] = getattr(obj, attr_name)
+    return data
 
 
 def calculate_entropy(sequence):
@@ -31,15 +43,9 @@ def calculate_sequence_entropy(sequence):
     )
 
 
+@dataclass
 class Scale:
-    def __init__(self, deltas):
-        self.deltas = deltas
-
-    def __repr__(self):
-        return f"{self.deltas}"
-
-    def __str__(self):
-        return f"entropy: {self.sequence_entropy:.2f}, span: {self.span}, deltas: {self.deltas}"
+    deltas: List[int]
 
     @property
     def pitch_classes(self):
@@ -67,7 +73,6 @@ class Scale:
     def entropy(self):
         return calculate_entropy(self.deltas)
 
-    @property
     def transition_entropy(self):
         return calculate_subseq_entropy(self.deltas, 2)
 
@@ -160,6 +165,7 @@ def midi_to_note_name(midi_number):
     return f"{note_names[note_index]}{octave}"
 
 
+@dataclass
 class VoiceLeading:
     def __init__(self, chord_a: Scale, base_a: int, chord_b: Scale, base_b: int):
         self.chord_a = chord_a
@@ -183,18 +189,23 @@ class VoiceLeading:
     def real_b_names(self):
         return [midi_to_note_name(x) for x in self.chord_b.realization(self.base_b)]
 
+    @property
     def onehot_changed_voices(self):
         return [int(a != b) for a, b in zip(self.real_a, self.real_b)]
 
+    @property
     def sequence_entropy_of_changes(self):
-        return calculate_sequence_entropy(self.onehot_changed_voices())
+        return calculate_sequence_entropy(self.onehot_changed_voices)
 
+    @property
     def common_notes(self):
         return [a for a, b in zip(self.real_a, self.real_b) if a == b]
 
+    @property
     def changed_notes(self):
         return [(a, b) for a, b in zip(self.real_a, self.real_b) if a != b]
 
+    @property
     def swaps(self):
         none_matches = [(a, b) for a, b in zip(self.real_a, self.real_b) if a != b]
         swaps = []
@@ -204,56 +215,55 @@ class VoiceLeading:
 
         return swaps
 
+    @property
     def n_common_notes(self):
-        return len(self.common_notes())
+        return len(self.common_notes)
 
+    @property
     def n_changed_notes(self):
-        return len(self.changed_notes())
+        return len(self.changed_notes)
 
+    @property
     def n_swaps(self):
-        return len(self.swaps())
+        return len(self.swaps)
 
+    @property
     def change_in_span(self):
         return self.chord_b.span - self.chord_a.span
 
+    @property
     def n_upward_motion(self):
         n = 0
-        for a, b in self.changed_notes():
+        for a, b in self.changed_notes:
             if b > a:
                 n += 1
         return n
 
+    @property
     def n_downward_motion(self):
         n = 0
-        for a, b in self.changed_notes():
+        for a, b in self.changed_notes:
             if a > b:
                 n += 1
         return n
 
+    @property
     def motion_balance(self):
-        if self.n_downward_motion() == 0:
+        if self.n_downward_motion == 0:
             return 0.0
-        ratio = self.n_upward_motion() / self.n_downward_motion()
+        ratio = self.n_upward_motion / self.n_downward_motion
         if ratio > 1.0:
             ratio = 1 / ratio
         return ratio
 
+    @property
     def max_step_size(self):
-        return max([abs(a - b) for a, b in self.changed_notes()])
+        return max([abs(a - b) for a, b in self.changed_notes])
 
+    @property
     def n_pseudo_changes(self):
         n = 0
-        for _, b in self.changed_notes():
+        for _, b in self.changed_notes:
             if b in self.real_a:
                 n += 1
         return n
-
-    def __repr__(self):
-        return (
-            f"seq entropy: {self.chord_a.sequence_entropy:.2f} span: {self.chord_a.span} | {self.real_a_names}\n"
-            f"seq entropy: {self.chord_b.sequence_entropy:.2f} span: {self.chord_b.span} | {self.real_b_names}\n"
-            f"{self.n_common_notes()} common | {self.n_changed_notes()} changes | {self.n_swaps()} swaps\n"
-            f"changed places: {self.onehot_changed_voices()}\n"
-            f"sequence entropy of changes: {self.sequence_entropy_of_changes():.2f}\n"
-            f"max step size: {self.max_step_size()}\n"
-        )
