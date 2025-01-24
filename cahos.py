@@ -45,7 +45,7 @@ class Scale:
     intervals: IntSequence11
     pitch_classes: IntSequence12
     span: int
-    interval_set: set[int]
+    interval_set: List[int]
     n_unique_intervals: int
     entropy: float
     bigram_entropy: float
@@ -57,7 +57,7 @@ def make_scale(intervals: IntSequence11) -> Scale:
         intervals=intervals,
         pitch_classes=[a % 12 for a in accumulate(intervals, initial=0)],
         span=sum(intervals),
-        interval_set=set(intervals),
+        interval_set=list(set(intervals)),
         n_unique_intervals=len(set(intervals)),
         entropy=calculate_entropy(intervals),
         bigram_entropy=calculate_subseq_entropy(intervals, 2),
