@@ -4,6 +4,7 @@ from itertools import accumulate
 from math import log2
 from typing import Annotated, List, Literal, Sequence, Tuple, TypeAlias, cast
 
+import polars as pl
 
 IntSequence11: TypeAlias = Annotated[Sequence[int], 11]
 IntSequence12: TypeAlias = Annotated[Sequence[int], 12]
@@ -50,6 +51,18 @@ class Scale:
     entropy: float
     bigram_entropy: float
     sequence_entropy: float
+
+
+scale_schema = {
+    "intervals": pl.List(pl.UInt8),
+    "pitch_classes": pl.List(pl.UInt8),
+    "span": pl.UInt8,
+    "interval_set": pl.List(pl.UInt8),
+    "n_unique_intervals": pl.UInt8,
+    "entropy": pl.Float64,
+    "bigram_entropy": pl.Float64,
+    "sequence_entropy": pl.Float64,
+}
 
 
 def make_scale(intervals: IntSequence11) -> Scale:
@@ -177,6 +190,33 @@ class VoiceLeading:
     motion_balance: float
     max_step_size: int
     n_pseudo_changes: int
+
+
+voice_leading_schema = {
+    "intervals_a": pl.List(pl.UInt8),
+    "intervals_b": pl.List(pl.UInt8),
+    "base_a": pl.UInt8,
+    "base_b": pl.UInt8,
+    "midis_a": pl.List(pl.UInt8),
+    "midis_b": pl.List(pl.UInt8),
+    "note_names_a": pl.List(pl.String),
+    "note_names_b": pl.List(pl.String),
+    "onehot_changed_voices": pl.List(pl.Binary),
+    "entropy_of_changes": pl.Float64,
+    "sequence_entropy_of_changes": pl.Float64,
+    "common_notes": pl.List(pl.UInt8),
+    "changed_notes": pl.List(pl.List(pl.UInt8)),
+    "swaps": pl.List(pl.List(pl.UInt8)),
+    "n_changed_notes": pl.UInt8,
+    "n_common_notes": pl.UInt8,
+    "n_swaps": pl.UInt8,
+    "change_in_span": pl.Int8,
+    "n_upward_motion": pl.UInt8,
+    "n_downward_motion": pl.UInt8,
+    "motion_balance": pl.Float64,
+    "max_step_size": pl.UInt8,
+    "n_pseudo_changes": pl.UInt8,
+}
 
 
 def intervals_to_midis(intervals: Sequence[int], start: int) -> List[int]:
