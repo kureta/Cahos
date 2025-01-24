@@ -251,7 +251,7 @@ def make_voice_leading(
     swaps = get_swaps(midis_a, midis_b)
     change_in_span = get_span(midis_b) - get_span(midis_a)
     n_upward_motion = count_upward_motion(changed_notes)
-    n_downward_motion = count_upward_motion(changed_notes)
+    n_downward_motion = count_downward_motion(changed_notes)
 
     return VoiceLeading(
         intervals_a=intervals_a,
