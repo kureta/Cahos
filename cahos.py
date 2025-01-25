@@ -267,7 +267,7 @@ def calculate_motion_balance(n_upward_motion: int, n_downward_motion: int) -> fl
 
 
 def get_max_step_size(changed_notes: Sequence[NotePair]) -> int:
-    return max([abs(a - b) for a, b in changed_notes])
+    return max([abs(b - a) for a, b in changed_notes])
 
 
 def get_n_pseudo_changes(
@@ -318,3 +318,25 @@ def make_voice_leading(
         max_step_size=get_max_step_size(changed_notes),
         n_pseudo_changes=get_n_pseudo_changes(midis_a, changed_notes),
     )
+
+
+@dataclass
+class Instrument:
+    name: str
+    program: int
+    register: Tuple[int, int]
+
+
+@dataclass
+class Instruments:
+    piccolo = Instrument("Piccolo", 72, (74, 102))
+    flute = Instrument("Flute", 73, (60, 96))
+    oboe = Instrument("Oboe", 68, (58, 91))
+    clarinet = Instrument("Clarinet", 71, (50, 94))
+    bass_clarinet = Instrument("Bass Clarinet", 71, (38, 77))
+    horn = Instrument("Horn", 59, (34, 77))
+    trombone = Instrument("Trombone", 59, (40, 72))
+    violin = Instrument("Violin", 44, (55, 103))
+    viola = Instrument("Viola", 44, (48, 91))
+    cello = Instrument("Violoncello", 44, (36, 76))
+    contrabass = Instrument("Contrabass", 44, (28, 67))
